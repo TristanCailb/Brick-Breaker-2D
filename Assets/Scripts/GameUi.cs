@@ -10,6 +10,11 @@ namespace BrickBreaker
         [SerializeField] private TMP_Text currentScoreText;
         [SerializeField] private TMP_Text highScoreText;
         [SerializeField] private GameObject pauseScreen;
+        
+        [Header("Game Over")]
+        [SerializeField] private GameObject gameOverScreen;
+        [SerializeField] private TMP_Text gameOverScoreText;
+        [SerializeField] private TMP_Text gameOverHighScoreText;
 
         private void Start()
         {
@@ -54,8 +59,20 @@ namespace BrickBreaker
         public void BackToMenu()
         {
             GameManager.Instance.CheckHighScore();
-            GameManager.Instance.TogglePause();
+            GameManager.Instance.SetGamePaused(false);
             SceneManager.LoadScene(0);
+        }
+
+        /// <summary>
+        /// Show the game over screen
+        /// </summary>
+        public void ShowGameOverScreen(int currentScore, HighScoreData highScore)
+        {
+            gameOverScreen.SetActive(true);
+            gameOverScoreText.text = $"Score: {currentScore}";
+            gameOverHighScoreText.text = highScore.playerName == string.Empty ? 
+                $"High Score: {highScore.highScore}" : 
+                $"High Score: {highScore.playerName}: {highScore.highScore}";
         }
 
         private void OnDestroy()

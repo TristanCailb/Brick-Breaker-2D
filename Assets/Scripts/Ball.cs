@@ -3,10 +3,12 @@ using UnityEngine.Events;
 
 namespace BrickBreaker
 {
-    [RequireComponent(typeof(Rigidbody2D))]
+    [RequireComponent(typeof(Rigidbody2D)), RequireComponent(typeof(TrailRenderer))]
     public class Ball : MonoBehaviour
     {
         private Rigidbody2D _rb;
+        private TrailRenderer _trail;
+        
         private PaddleController _paddle;
         public bool IsLaunched { get; private set; }
         [SerializeField] private float speed = 5f;
@@ -18,6 +20,8 @@ namespace BrickBreaker
         private void Start()
         {
             _rb = GetComponent<Rigidbody2D>();
+            _trail = GetComponent<TrailRenderer>();
+            _trail.emitting = false;
         }
         
         private void Update()
@@ -92,6 +96,7 @@ namespace BrickBreaker
             IsLaunched = true;
             var launchForce = Vector2.up * speed + Vector2.right * (Random.Range(-1f, 1f) * maxLaunchAngle);
             _rb.AddForce(launchForce, ForceMode2D.Impulse);
+            _trail.emitting = true;
         }
 
         private void OnDestroy()

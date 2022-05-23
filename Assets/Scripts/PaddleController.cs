@@ -32,6 +32,7 @@ namespace BrickBreaker
         /// </summary>
         private void GetInputs()
         {
+            if (GameManager.Instance.GameIsOver) return;
             if (!GameManager.Instance.GameIsPaused)
             {
                 // Paddle movement
@@ -51,7 +52,7 @@ namespace BrickBreaker
             // Toggle pause
             if (Input.GetButtonDown("Pause"))
             {
-                GameManager.Instance.TogglePause();
+                GameManager.Instance.SetGamePaused(!GameManager.Instance.GameIsPaused);
             }
         }
 
@@ -60,6 +61,7 @@ namespace BrickBreaker
         /// </summary>
         private void MovePaddle()
         {
+            if (GameManager.Instance.GameIsOver) return;
             var pos = _rb.position;
             var desiredPos = pos + Vector2.right * (_horizontalInput * speed * Time.fixedDeltaTime);
             _rb.MovePosition(desiredPos);

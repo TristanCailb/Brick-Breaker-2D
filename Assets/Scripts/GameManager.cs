@@ -27,6 +27,7 @@ namespace BrickBreaker
         [SerializeField] private HighScoreData highScore;
         private bool _gameIsPaused;
         public bool GameIsPaused => _gameIsPaused;
+        public bool GameIsOver { get; private set; }
 
         [Header("Events")]
         public UnityEvent<int> onScoreChanged;
@@ -46,10 +47,19 @@ namespace BrickBreaker
         /// </summary>
         private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
         {
-            SetMenuHighScore();
-            
-            FindPaddle();
-            InitializeGameUi();
+            if (scene.buildIndex == 0)
+            {
+                // In menu scene
+                LoadHighScore();
+                SetMenuHighScore();
+            }
+            else if (scene.buildIndex == 1)
+            {
+                // In game scene
+                FindPaddle();
+                InitializeGameUi();
+                GameIsOver = false;
+            }
         }
 
         /// <summary>
@@ -118,8 +128,13 @@ namespace BrickBreaker
 
             if (lives <= 0)
             {
+                GameIsOver = true;
                 CheckHighScore();
-                //TODO: Show game over screen
+                var gameUi = FindObjectOfType<GameUi>();
+                if (gameUi != null)
+                {
+                    gameUi.ShowGameOverScreen(currentScore, highScore);
+                }
             }
             else
             {
@@ -180,11 +195,11 @@ namespace BrickBreaker
         /// <summary>
         /// Toggle pause
         /// </summary>
-        public void TogglePause()
+        public void SetGamePaused(bool isPaused)
         {
             var gameUi = FindObjectOfType<GameUi>();
             if (gameUi == null) return;
-            _gameIsPaused = !_gameIsPaused;
+            _gameIsPaused = isPaused;
 
             if (_gameIsPaused)
             {
