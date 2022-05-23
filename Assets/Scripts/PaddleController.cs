@@ -32,15 +32,26 @@ namespace BrickBreaker
         /// </summary>
         private void GetInputs()
         {
-            _horizontalInput = Input.GetAxis("Horizontal");
-
-            if (Input.GetButtonDown("Launch"))
+            if (!GameManager.Instance.GameIsPaused)
             {
-                var ball = GameManager.Instance.CurrentBall;
-                if (ball != null && !ball.IsLaunched)
+                // Paddle movement
+                _horizontalInput = Input.GetAxis("Horizontal");
+                
+                // Launch the ball
+                if (Input.GetButtonDown("Launch"))
                 {
-                    ball.Launch();
+                    var ball = GameManager.Instance.CurrentBall;
+                    if (ball != null && !ball.IsLaunched)
+                    {
+                        ball.Launch();
+                    }
                 }
+            }
+            
+            // Toggle pause
+            if (Input.GetButtonDown("Pause"))
+            {
+                GameManager.Instance.TogglePause();
             }
         }
 

@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.IO;
+using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.SceneManagement;
 
@@ -16,12 +17,16 @@ namespace BrickBreaker
         }
         #endregion
 
+        private string _currentPlayerName;
         private PaddleController _paddle;
         [SerializeField] private Ball ballPrefab;
         [SerializeField] private int currentScore;
         [SerializeField] private int lives = 3;
 
         public Ball CurrentBall { get; private set; }
+        [SerializeField] private HighScoreData highScore;
+        private bool _gameIsPaused;
+        public bool GameIsPaused => _gameIsPaused;
 
         [Header("Events")]
         public UnityEvent<int> onScoreChanged;
@@ -30,8 +35,10 @@ namespace BrickBreaker
         private void Start()
         {
             SceneManager.sceneLoaded += OnSceneLoaded;
+            LoadHighScore();
+            SetMenuHighScore();
             FindPaddle();
-            InitializeLivesUi();
+            InitializeGameUi();
         }
         
         /// <summary>
@@ -39,8 +46,10 @@ namespace BrickBreaker
         /// </summary>
         private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
         {
+            SetMenuHighScore();
+            
             FindPaddle();
-            InitializeLivesUi();
+            InitializeGameUi();
         }
 
         /// <summary>
@@ -51,19 +60,35 @@ namespace BrickBreaker
             _paddle = FindObjectOfType<PaddleController>();
             if (_paddle != null)
             {
+                lives = 3;
+                currentScore = 0;
                 SpawnBall();
             }
         }
 
         /// <summary>
-        /// Initialize the lives UI
+        /// Set the menu high score text
         /// </summary>
-        private void InitializeLivesUi()
+        private void SetMenuHighScore()
+        {
+            var menuUi = FindObjectOfType<MenuUi>();
+            if (menuUi != null)
+            {
+                menuUi.SetHighScore(highScore);
+            }
+        }
+
+        /// <summary>
+        /// Initialize the game UI
+        /// </summary>
+        private void InitializeGameUi()
         {
             var gameUi = FindObjectOfType<GameUi>();
             if (gameUi != null)
             {
                 gameUi.UpdateLives(lives);
+                gameUi.UpdateCurrentScore(currentScore);
+                gameUi.UpdateHighScore(highScore);
             }
         }
 
@@ -93,6 +118,7 @@ namespace BrickBreaker
 
             if (lives <= 0)
             {
+                CheckHighScore();
                 //TODO: Show game over screen
             }
             else
@@ -108,6 +134,68 @@ namespace BrickBreaker
         {
             currentScore += value;
             onScoreChanged?.Invoke(currentScore);
+        }
+
+        /// <summary>
+        /// Set the player name
+        /// </summary>
+        public void SetPlayerName(string playerName)
+        {
+            _currentPlayerName = playerName;
+        }
+
+        /// <summary>
+        /// Check if the current score is higher than the current high score
+        /// </summary>
+        public void CheckHighScore()
+        {
+            if (currentScore > highScore.highScore)
+            {
+                highScore.playerName = _currentPlayerName;
+                highScore.highScore = currentScore;
+                SaveHighScore();
+            }
+        }
+
+        /// <summary>
+        /// Save the high score in a file
+        /// </summary>
+        private void SaveHighScore()
+        {
+            var json = JsonUtility.ToJson(highScore);
+            File.WriteAllText(Application.persistentDataPath + "/highscore.json", json);
+        }
+
+        /// <summary>
+        /// Load the high score save file
+        /// </summary>
+        private void LoadHighScore()
+        {
+            var path = Application.persistentDataPath + "/highscore.json";
+            if (!File.Exists(path)) return;
+            var json = File.ReadAllText(path);
+            highScore = JsonUtility.FromJson<HighScoreData>(json);
+        }
+
+        /// <summary>
+        /// Toggle pause
+        /// </summary>
+        public void TogglePause()
+        {
+            var gameUi = FindObjectOfType<GameUi>();
+            if (gameUi == null) return;
+            _gameIsPaused = !_gameIsPaused;
+
+            if (_gameIsPaused)
+            {
+                gameUi.SetPauseScreenVisible(true);
+                Time.timeScale = 0f;
+            }
+            else
+            {
+                Time.timeScale = 1f;
+                gameUi.SetPauseScreenVisible(false);
+            }
         }
 
         private void OnDestroy()

@@ -1,5 +1,6 @@
 ﻿using TMPro;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace BrickBreaker
 {
@@ -8,6 +9,7 @@ namespace BrickBreaker
         [SerializeField] private TMP_Text livesText;
         [SerializeField] private TMP_Text currentScoreText;
         [SerializeField] private TMP_Text highScoreText;
+        [SerializeField] private GameObject pauseScreen;
 
         private void Start()
         {
@@ -26,9 +28,34 @@ namespace BrickBreaker
         /// <summary>
         /// Update the current score text
         /// </summary>
-        private void UpdateCurrentScore(int score)
+        public void UpdateCurrentScore(int score)
         {
             currentScoreText.text = $"Score: {score}";
+        }
+
+        public void UpdateHighScore(HighScoreData highScore)
+        {
+            highScoreText.text = highScore.playerName == string.Empty ? 
+                $"High Score: {highScore.highScore}" : 
+                $"High Score: {highScore.playerName}: {highScore.highScore}";
+        }
+
+        /// <summary>
+        /// Set pause menu visibility
+        /// </summary>
+        public void SetPauseScreenVisible(bool isVisible)
+        {
+            pauseScreen.SetActive(isVisible);
+        }
+
+        /// <summary>
+        /// Go back to menu
+        /// </summary>
+        public void BackToMenu()
+        {
+            GameManager.Instance.CheckHighScore();
+            GameManager.Instance.TogglePause();
+            SceneManager.LoadScene(0);
         }
 
         private void OnDestroy()
